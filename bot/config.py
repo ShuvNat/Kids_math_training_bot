@@ -9,8 +9,15 @@ class BotConfig:
 
 
 @dataclass
+class DbConfig:
+    dns: str
+    is_echo: bool
+
+
+@dataclass
 class Config:
     tg_bot: BotConfig
+    db: DbConfig
 
 
 def load_config(path: str | None = None) -> Config:
@@ -20,4 +27,8 @@ def load_config(path: str | None = None) -> Config:
         tg_bot=BotConfig(
             token=env('BOT_TOKEN'),
             admin_ids=list(map(int, env.list('ADMIN_IDS')))),
+        db=DbConfig(
+            dns=env('DNS'),
+            is_echo=env.bool('IS_ECHO')
+        )
     )

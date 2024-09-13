@@ -13,9 +13,11 @@ class Tasks:
     def __init__(self):
         self.question = ''
         self.answer = 0
+        self.name = ''
 
     def scales_and_fruis(self):
 
+        self.name = 'scales_and_fruis'
         self.answer = randrange(50, 120, 1)
         a = randrange(1, 10, 1)
         b = randrange(0, 1000, 10)
@@ -44,6 +46,7 @@ class Tasks:
 
     def fruit_picking(self,):
 
+        self.name = 'fruit_picking'
         x = randint(3, 100)
         a = randint(2, 15)
         less_or_more_index = randint(0, 2)
@@ -65,6 +68,8 @@ class Tasks:
                          f'{fruit} собрали за оба дня?\n')
 
     def linear_equasion(self):
+
+        self.name = 'linear_equasion'
         variable = choice(VARIABLE_LIST)
         self.answer = randint(3, 99)
         a = randint(2, 9)
@@ -85,6 +90,8 @@ class Tasks:
         self.question = f'{string}\nЧему равно {variable}?\n'
 
     def area_and_perimeter(self):
+
+        self.name = 'area_and_perimeter'
         meas_units = choice(MEAS_UNITS)
         sqare_side = choice([4, 6, 8, 9, 10, 12, 14, 15, 16, 18,
                             20, 21, 22, 24, 25, 26, 27, 28, 30])
