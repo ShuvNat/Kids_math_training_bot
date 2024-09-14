@@ -17,18 +17,12 @@ async def main():
     config: Config = load_config()
 
     engine = create_async_engine(
-        url=str(config.db.dns),  # здесь требуется приведение к строке
+        url=str(config.db.dns),
         echo=config.db.is_echo
     )
 
     async with engine.begin() as conn:
         await conn.execute(text("SELECT 1"))
-
-    async with engine.begin() as connection:
-        # Если ловите ошибку "таблица уже существует",
-        # раскомментируйте следующую строку:
-        # await connection.run_sync(Base.metadata.drop_all)
-        await connection.run_sync(Base.metadata.create_all)
 
     dp = Dispatcher(admin_ids=config.tg_bot.admin_ids)
 
