@@ -6,7 +6,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from config import Config, load_config
-from db_models import Base
 from handlers_users import user_router
 from menu_commands import set_main_menu
 from middelwares import DbSessionMiddleware, TrackAllUsersMiddleware

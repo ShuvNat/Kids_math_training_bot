@@ -5,7 +5,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db_requests import add_or_update_task, get_daily_results
+from db_requests import add_or_update_task, get_daily_results, get_weekly_results
 from fsm import FSMSolveTask
 from keyboards import keyboard
 from lexicon import LEXICON
@@ -91,7 +91,6 @@ async def check_answer(message: Message, state: FSMContext, session: AsyncSessio
     task_type = data.get('task_type')
     user_answer = message.text
     mistakes = data.get('mistakes', 0)
-    print(mistakes)
 
     if user_answer.isdigit() and int(user_answer) == correct_answer:
         await add_or_update_task(session, message.from_user.id, task_type, mistakes)
@@ -109,7 +108,7 @@ async def check_answer(message: Message, state: FSMContext, session: AsyncSessio
 
 
 # обработчик выдающий статистику за текущий день
-@user_router.message(Command('stats'))
+@user_router.message(Command('stats_daily'))
 async def cmd_daily_stats(
     message: Message,
     session: AsyncSession,
@@ -132,6 +131,48 @@ async def cmd_daily_stats(
             f'Линейных уравнений: {task_record.linear_equasion}\n'
             f'Площадь и периметр: {task_record.area_and_perimeter}\n\n'
             f'Сделано ошибок: {task_record.mistakes}\n'
+        )
+        await message.answer(text=LEXICON['one_more'],
+                             reply_markup=keyboard)
+
+
+# обработчик выдающий статистику за текущий день
+@user_router.message(Command('stats_weekly'))
+async def cmd_weekly_stats(
+    message: Message,
+    session: AsyncSession,
+):
+    task_record: int = await get_weekly_results(
+        session, message.from_user.id
+    )
+    if not task_record:
+        await message.answer(text=LEXICON['no_stats'],
+                             reply_markup=keyboard)
+    else:
+        weekly_total = 0
+        weekly_scales_and_fruis = 0
+        weekly_fruit_picking = 0
+        weekly_linear_equasion = 0
+        weekly_area_and_perimeter = 0
+        weekly_mistakes = 0
+        for record in task_record:
+            total_score = (record.scales_and_fruis + record.fruit_picking +
+                           record.linear_equasion + record.area_and_perimeter)
+            weekly_total += total_score
+            weekly_scales_and_fruis += record.scales_and_fruis
+            weekly_fruit_picking += record.fruit_picking
+            weekly_linear_equasion += record.linear_equasion
+            weekly_area_and_perimeter += record.area_and_perimeter
+            weekly_mistakes += record.mistakes
+        await message.answer(
+            f"Привет, {message.from_user.first_name}!\n"
+            f"За прошедшую неделю решено задач: {weekly_total}\n\n"
+            f'Из них\n'
+            f'Взвешивание фруктов: {weekly_scales_and_fruis}\n'
+            f'Сбор фруктов: {weekly_fruit_picking}\n'
+            f'Линейных уравнений: {weekly_linear_equasion}\n'
+            f'Площадь и периметр: {weekly_area_and_perimeter}\n\n'
+            f'Сделано ошибок: {weekly_mistakes}\n'
         )
         await message.answer(text=LEXICON['one_more'],
                              reply_markup=keyboard)

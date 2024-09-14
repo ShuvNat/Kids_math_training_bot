@@ -11,7 +11,9 @@ async def set_main_menu(bot: Bot):
                    description='Выбор задачи'),
         BotCommand(command='/cancel',
                    description='Отмена задачи'),
-        BotCommand(command='/stats',
+        BotCommand(command='/stats_daily',
                    description='Статистика за день'),
+        BotCommand(command='/stats_weekly',
+                   description='Статистика за неделю'),
     ]
     await bot.set_my_commands(main_menu_commands)

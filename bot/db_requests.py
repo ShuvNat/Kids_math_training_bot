@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as upsert
@@ -71,3 +71,19 @@ async def get_daily_results(
     result = await session.execute(stmt)
     task_record = result.scalar_one_or_none()
     return task_record
+
+
+async def get_weekly_results(
+    session: AsyncSession,
+    telegram_id: int,
+):
+    end_date = date.today()
+    start_date = end_date - timedelta(days=7)
+    stmt = (
+        select(Tasks)
+        .filter(Tasks.user_id == telegram_id)
+        .filter(Tasks.created_at.between(start_date, end_date))
+    )
+    result = await session.execute(stmt)
+    task_records = result.scalars().all()
+    return task_records
