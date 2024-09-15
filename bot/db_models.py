@@ -1,7 +1,8 @@
 from datetime import date
 from uuid import UUID
 
-from sqlalchemy import BigInteger, Date, Integer, ForeignKey, String, Uuid, func, text
+from sqlalchemy import BigInteger, Date, Integer, ForeignKey, String, UniqueConstraint, Uuid, func, text
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -50,14 +51,24 @@ class Tasks(Base):
     mistakes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     # created_at добавляется из Base
 
+    __table_args__ = (
+        UniqueConstraint('user_id', 'created_at', name='uq_user_task_per_day'),
+    )
+
+    @hybrid_property
+    def total(self):
+        return (self.scales_and_fruis +
+                self.fruit_picking +
+                self.linear_equasion +
+                self.area_and_perimeter)
+
     def __repr__(self) -> str:
-        count = (self.scales_and_fruis + self.fruit_picking + self.linear_equasion + self.area_and_perimeter)
-        if count in (11, 12, 13, 14) or count % 10 in (0, 5, 6, 7, 8, 9):
+        if self.total in (11, 12, 13, 14) or self.total % 10 in (0, 5, 6, 7, 8, 9):
             word = 'здадач'
-        elif count % 10 == 1:
+        elif self.total % 10 == 1:
             word = 'задачу'
         else:
             word = 'задачи'
-        return f'Решено {count} {word}'
+        return f'Решено {self.total} {word}'
 
     user: Mapped["User"] = relationship(back_populates="tasks")

@@ -62,9 +62,8 @@ async def cmd_repeat(message: Message):
 @user_router.message(Command('repeat'), StateFilter(FSMSolveTask.get_answer))
 async def cmd_repeat_state(message: Message, state: FSMContext):
     data = await state.get_data()
-    answer = data.get('answer')
     question = data.get('question')
-    await message.answer(text=f'{question}\nОтвет {answer}')
+    await message.answer(text=f'{question}')
 
 
 # обработчик выдающий задачу
@@ -77,7 +76,7 @@ async def get_task(callback: CallbackQuery, state: FSMContext):
         question=task.question, answer=task.answer, task_type=task.name
     )
     await callback.message.answer(
-            text=f'{task.question}\nОтвет {task.answer}'
+            text=f'{task.question}'
         )
     await state.set_state(FSMSolveTask.get_answer)
     await callback.answer()
@@ -120,11 +119,9 @@ async def cmd_daily_stats(
         await message.answer(text=LEXICON['no_stats'],
                              reply_markup=keyboard)
     else:
-        total_score = (task_record.scales_and_fruis + task_record.fruit_picking +
-                       task_record.linear_equasion + task_record.area_and_perimeter)
         await message.answer(
             f"Привет, {message.from_user.first_name}!\n"
-            f"Сегодня решено задач: {total_score}\n\n"
+            f"Сегодня решено задач: {task_record.total}\n\n"
             f'Из них\n'
             f'Взвешивание фруктов: {task_record.scales_and_fruis}\n'
             f'Сбор фруктов: {task_record.fruit_picking}\n'
@@ -142,37 +139,22 @@ async def cmd_weekly_stats(
     message: Message,
     session: AsyncSession,
 ):
-    task_record: int = await get_weekly_results(
+    weekly_record: int = await get_weekly_results(
         session, message.from_user.id
     )
-    if not task_record:
+    if not weekly_record:
         await message.answer(text=LEXICON['no_stats'],
                              reply_markup=keyboard)
     else:
-        weekly_total = 0
-        weekly_scales_and_fruis = 0
-        weekly_fruit_picking = 0
-        weekly_linear_equasion = 0
-        weekly_area_and_perimeter = 0
-        weekly_mistakes = 0
-        for record in task_record:
-            total_score = (record.scales_and_fruis + record.fruit_picking +
-                           record.linear_equasion + record.area_and_perimeter)
-            weekly_total += total_score
-            weekly_scales_and_fruis += record.scales_and_fruis
-            weekly_fruit_picking += record.fruit_picking
-            weekly_linear_equasion += record.linear_equasion
-            weekly_area_and_perimeter += record.area_and_perimeter
-            weekly_mistakes += record.mistakes
         await message.answer(
             f"Привет, {message.from_user.first_name}!\n"
-            f"За прошедшую неделю решено задач: {weekly_total}\n\n"
+            f"За прошедшую неделю решено задач: {weekly_record.total}\n\n"
             f'Из них\n'
-            f'Взвешивание фруктов: {weekly_scales_and_fruis}\n'
-            f'Сбор фруктов: {weekly_fruit_picking}\n'
-            f'Линейных уравнений: {weekly_linear_equasion}\n'
-            f'Площадь и периметр: {weekly_area_and_perimeter}\n\n'
-            f'Сделано ошибок: {weekly_mistakes}\n'
+            f'Взвешивание фруктов: {weekly_record.scales_and_fruis}\n'
+            f'Сбор фруктов: {weekly_record.fruit_picking}\n'
+            f'Линейных уравнений: {weekly_record.linear_equasion}\n'
+            f'Площадь и периметр: {weekly_record.area_and_perimeter}\n\n'
+            f'Сделано ошибок: {weekly_record.mistakes}\n'
         )
         await message.answer(text=LEXICON['one_more'],
                              reply_markup=keyboard)

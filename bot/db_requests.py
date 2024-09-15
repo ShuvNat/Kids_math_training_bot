@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -80,10 +80,17 @@ async def get_weekly_results(
     end_date = date.today()
     start_date = end_date - timedelta(days=7)
     stmt = (
-        select(Tasks)
+        select(
+            func.sum(Tasks.scales_and_fruis).label('scales_and_fruis'),
+            func.sum(Tasks.fruit_picking).label('fruit_picking'),
+            func.sum(Tasks.linear_equasion).label('linear_equasion'),
+            func.sum(Tasks.area_and_perimeter).label('area_and_perimeter'),
+            func.sum(Tasks.total).label('total'),
+            func.sum(Tasks.mistakes).label('mistakes')
+        )
         .filter(Tasks.user_id == telegram_id)
         .filter(Tasks.created_at.between(start_date, end_date))
     )
     result = await session.execute(stmt)
-    task_records = result.scalars().all()
+    task_records = result.fetchone()
     return task_records
