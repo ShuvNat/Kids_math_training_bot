@@ -22,5 +22,11 @@ psycopg==3.2.1
 psycopg-binary==3.2.1
 pydantic==2.8.2
 pydantic_core==2.20.1
+python-dateutil==2.9.0
+python-dotenv==1.0.1
 redis==5.0.8
+six==1.16.0
 SQLAlchemy==2.0.34
+typing_extensions==4.12.2
+tzdata==2024.1
+yarl==1.11.1

@@ -5,7 +5,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db_requests import add_or_update_task, get_daily_results, get_weekly_results
+from db_requests import add_or_update_task, get_daily_results, get_monthly_results, get_weekly_results
 from fsm import FSMSolveTask
 from keyboards import keyboard
 from lexicon import LEXICON
@@ -18,6 +18,12 @@ user_router = Router()
 @user_router.message(CommandStart(), StateFilter(default_state))
 async def cmd_start(message: Message):
     await message.answer(text=LEXICON['/start'])
+
+
+# обработчик команды help
+@user_router.message(Command(commands='help'))
+async def cmd_help(message: Message):
+    await message.answer(text=LEXICON['/help'])
 
 
 # обработчик команды task в основном режиме выдает клавиатуру в выбором задачи
@@ -34,6 +40,12 @@ async def cmd_task(message: Message):
 async def get_task_state(callback: CallbackQuery):
     await callback.message.answer(text=LEXICON['/task_state'])
     await callback.answer()
+
+
+# обработчик команд статистики в основном режиме
+@user_router.message(Command(commands=('stats_daily', 'stats_weekly', 'stats_monthly')), StateFilter(FSMSolveTask.get_answer))
+async def cmd_stats(message: Message):
+    await message.answer(text=LEXICON['stats_task'])
 
 
 # обработчик команды cancel в основном режиме
@@ -107,12 +119,12 @@ async def check_answer(message: Message, state: FSMContext, session: AsyncSessio
 
 
 # обработчик выдающий статистику за текущий день
-@user_router.message(Command('stats_daily'))
+@user_router.message(Command('stats_daily'), StateFilter(default_state))
 async def cmd_daily_stats(
     message: Message,
     session: AsyncSession,
 ):
-    task_record: int = await get_daily_results(
+    task_record = await get_daily_results(
         session, message.from_user.id
     )
     if not task_record:
@@ -133,13 +145,13 @@ async def cmd_daily_stats(
                              reply_markup=keyboard)
 
 
-# обработчик выдающий статистику за текущий день
-@user_router.message(Command('stats_weekly'))
+# обработчик выдающий статистику за неделю
+@user_router.message(Command('stats_weekly'), StateFilter(default_state))
 async def cmd_weekly_stats(
     message: Message,
     session: AsyncSession,
 ):
-    weekly_record: int = await get_weekly_results(
+    weekly_record = await get_weekly_results(
         session, message.from_user.id
     )
     if not weekly_record:
@@ -160,7 +172,34 @@ async def cmd_weekly_stats(
                              reply_markup=keyboard)
 
 
-# обработчик команды cancel в основном режиме
+# обработчик выдающий статистику за месяц
+@user_router.message(Command('stats_monthly'), StateFilter(default_state))
+async def cmd_monthly_stats(
+    message: Message,
+    session: AsyncSession,
+):
+    monthly_record = await get_monthly_results(
+        session, message.from_user.id
+    )
+    if not monthly_record:
+        await message.answer(text=LEXICON['no_stats'],
+                             reply_markup=keyboard)
+    else:
+        await message.answer(
+            f"Привет, {message.from_user.first_name}!\n"
+            f"За последний месяц решено задач: {monthly_record.total}\n\n"
+            f'Из них\n'
+            f'Взвешивание фруктов: {monthly_record.scales_and_fruis}\n'
+            f'Сбор фруктов: {monthly_record.fruit_picking}\n'
+            f'Линейных уравнений: {monthly_record.linear_equasion}\n'
+            f'Площадь и периметр: {monthly_record.area_and_perimeter}\n\n'
+            f'Сделано ошибок: {monthly_record.mistakes}\n'
+        )
+        await message.answer(text=LEXICON['one_more'],
+                             reply_markup=keyboard)
+
+
+# обработчик реагирующий на любые другие сообщения
 @user_router.message(StateFilter(default_state))
 async def any_message(message: Message):
     await message.answer(text=LEXICON['anything_else'],

@@ -5,7 +5,6 @@ from environs import Env
 @dataclass
 class BotConfig:
     token: str
-    admin_ids: list[int]
 
 
 @dataclass
@@ -26,7 +25,7 @@ def load_config(path: str | None = None) -> Config:
     return Config(
         tg_bot=BotConfig(
             token=env('BOT_TOKEN'),
-            admin_ids=list(map(int, env.list('ADMIN_IDS')))),
+        ),
         db=DbConfig(
             dns=env('DNS'),
             is_echo=env.bool('IS_ECHO')

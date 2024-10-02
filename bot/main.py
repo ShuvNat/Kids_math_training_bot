@@ -6,7 +6,8 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from config import Config, load_config
-from handlers_users import user_router
+from fsm import storage
+from handlers import user_router
 from menu_commands import set_main_menu
 from middelwares import DbSessionMiddleware, TrackAllUsersMiddleware
 
@@ -23,7 +24,7 @@ async def main():
     async with engine.begin() as conn:
         await conn.execute(text("SELECT 1"))
 
-    dp = Dispatcher(admin_ids=config.tg_bot.admin_ids)
+    dp = Dispatcher(storage=storage)
 
     Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
     dp.update.outer_middleware(DbSessionMiddleware(Sessionmaker))

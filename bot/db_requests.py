@@ -1,4 +1,5 @@
-from datetime import date, timedelta
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as upsert
@@ -78,7 +79,30 @@ async def get_weekly_results(
     telegram_id: int,
 ):
     end_date = date.today()
-    start_date = end_date - timedelta(days=7)
+    start_date = end_date - relativedelta(weeks=1)
+    stmt = (
+        select(
+            func.sum(Tasks.scales_and_fruis).label('scales_and_fruis'),
+            func.sum(Tasks.fruit_picking).label('fruit_picking'),
+            func.sum(Tasks.linear_equasion).label('linear_equasion'),
+            func.sum(Tasks.area_and_perimeter).label('area_and_perimeter'),
+            func.sum(Tasks.total).label('total'),
+            func.sum(Tasks.mistakes).label('mistakes')
+        )
+        .filter(Tasks.user_id == telegram_id)
+        .filter(Tasks.created_at.between(start_date, end_date))
+    )
+    result = await session.execute(stmt)
+    task_records = result.fetchone()
+    return task_records
+
+
+async def get_monthly_results(
+    session: AsyncSession,
+    telegram_id: int,
+):
+    end_date = date.today()
+    start_date = end_date - relativedelta(months=1)
     stmt = (
         select(
             func.sum(Tasks.scales_and_fruis).label('scales_and_fruis'),
